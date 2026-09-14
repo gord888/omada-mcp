@@ -103,6 +103,9 @@ export class HttpClient {
         method,
         headers,
         body: payload,
+        // Reject redirects: never forward OAuth credentials or access tokens
+        // to another origin. Local hardening, see LOCAL_PATCHES.md.
+        redirect: "error",
         dispatcher: this.dispatcher,
         signal: AbortSignal.timeout(this.options.timeoutMs),
       });
