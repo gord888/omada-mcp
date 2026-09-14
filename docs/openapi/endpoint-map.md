@@ -19,6 +19,7 @@ controller. Path prefix elided: every path is rooted at
 | `list_ssids`       | GET     | `wireless-network/ssids`                            | All SSIDs across all WLAN groups in the site.          |
 | `get_ssid`         | GET     | `wireless-network/wlans/{wlanId}/ssids/{ssidId}`    | Needs both ids. `list_ssids` items carry both.         |
 | `get_site_settings`| GET     | `roaming`, `band-steering`, `mesh`, `led`, `lldp`, `channel-limit`, `beacon-control`, `remember-device` | Composite — `omada-mcp` calls several in parallel and aggregates. |
+| `get_switch_ports` | GET     | `switches/ports/poe-info`, `switches/ports/switch-detail?switchMac={mac}` | Per-port link + PoE telemetry; joins `switch-detail` client/downlink attribution by port number. ✅ verified on 6.2.14.11 (2026-09-14). |
 | `list_events`      | GET     | `logs/events`                                       | Paginated.                                             |
 | `list_logs`        | GET     | `logs/alerts`                                       | Paginated alert log.                                   |
 

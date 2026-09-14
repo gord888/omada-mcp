@@ -193,6 +193,7 @@ All read tools are tagged `safe-read`. Every write tool defaults to
 | `list_ssids` | SSIDs grouped by WLAN group. |
 | `get_ssid` | Full SSID configuration. |
 | `get_site_settings` | Aggregate roaming + band-steering + mesh. |
+| `get_switch_ports` | Per-port link + PoE telemetry for switches (active/idle/n-a, W/V/mA, raw PD class); optional strict lookup. |
 | `list_events` | Site event log within a time window. |
 | `list_logs` | Site alert log (with `resolved` filter). |
 

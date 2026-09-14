@@ -292,6 +292,99 @@ export const alertLogResponseSchema = z.object({
 });
 export type AlertLogResponse = z.infer<typeof alertLogResponseSchema>;
 
+// ─── Switch ports / PoE ───────────────────────────────────────────────────────
+
+/** Per-port link + PoE status, as returned inside a `poe-info` row. */
+export const portStatusSchema = z
+  .object({
+    port: z.number().optional(),
+    linkStatus: z.number().optional(),
+    linkSpeed: z.number().optional(),
+    duplex: z.number().optional(),
+    poe: z.boolean().optional(),
+    poePower: z.number().nullable().optional(),
+    tx: z.number().optional(),
+    rx: z.number().optional(),
+    txRate: z.number().optional(),
+    rxRate: z.number().optional(),
+    stp: z.string().optional(),
+    stpDiscarding: z.boolean().optional(),
+  })
+  .passthrough();
+export type PortStatus = z.infer<typeof portStatusSchema>;
+
+/**
+ * One row from `GET /sites/{siteId}/switches/ports/poe-info`.
+ * Units (observed on Omada 6.2.14.11): `power` W, `voltage` V, `current` mA.
+ * Measurements are `null` when the port is not delivering power.
+ */
+export const switchPortPoeItemSchema = z
+  .object({
+    port: z.number(),
+    portName: z.string().optional(),
+    switchMac: z.string().optional(),
+    switchName: z.string().optional(),
+    supportPoe: z.boolean().optional(),
+    switchSupportPoe: z.number().optional(),
+    poe: z.number().optional(),
+    connectedStatus: z.number().optional(),
+    disable: z.boolean().optional(),
+    linkSpeed: z.number().optional(),
+    duplex: z.number().optional(),
+    poeStatus: z.number().nullable().optional(),
+    pdClass: z.string().optional(),
+    power: z.number().nullable().optional(),
+    voltage: z.number().nullable().optional(),
+    current: z.number().nullable().optional(),
+    portStatus: portStatusSchema.optional(),
+  })
+  .passthrough();
+export type SwitchPortPoeItem = z.infer<typeof switchPortPoeItemSchema>;
+
+/** A managed downstream device attached to a switch port (`downlinkList`). */
+export const switchDownlinkSchema = z
+  .object({
+    port: z.number().optional(),
+    name: z.string().optional(),
+    model: z.string().optional(),
+    mac: z.string().optional(),
+    ip: z.string().optional(),
+    type: z.string().optional(),
+    linkSpeed: z.number().optional(),
+    duplex: z.number().optional(),
+  })
+  .passthrough();
+export type SwitchDownlink = z.infer<typeof switchDownlinkSchema>;
+
+/** A client attributed to a switch port (`clientList`). */
+export const switchClientSchema = z
+  .object({
+    port: z.number().optional(),
+    name: z.string().optional(),
+    mac: z.string().optional(),
+    ip: z.string().optional(),
+    deviceType: z.string().optional(),
+  })
+  .passthrough();
+export type SwitchClient = z.infer<typeof switchClientSchema>;
+
+/** One entry from `GET /sites/{siteId}/switches/ports/switch-detail`. */
+export const switchDetailSchema = z
+  .object({
+    type: z.string().optional(),
+    mac: z.string(),
+    name: z.string().optional(),
+    model: z.string().optional(),
+    showModel: z.string().optional(),
+    ip: z.string().optional(),
+    status: z.number().optional(),
+    firmwareVersion: z.string().optional(),
+    downlinkList: z.array(switchDownlinkSchema).optional(),
+    clientList: z.array(switchClientSchema).optional(),
+  })
+  .passthrough();
+export type SwitchDetail = z.infer<typeof switchDetailSchema>;
+
 // ─── Generic helpers ────────────────────────────────────────────────────────
 
 /** Wraps an item schema in the Open API paginated-list envelope. */

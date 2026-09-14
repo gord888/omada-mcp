@@ -31,9 +31,13 @@ import {
   type SiteLed,
   type SiteSsidGroup,
   type SsidListItem,
+  type SwitchDetail,
+  type SwitchPortPoeItem,
   siteLedSchema,
   siteSchema,
   ssidListItemSchema,
+  switchDetailSchema,
+  switchPortPoeItemSchema,
   type WlanGroup,
   wlanGroupSchema,
 } from "./types.js";
@@ -41,6 +45,11 @@ import {
 export interface ListOpts {
   page?: number;
   pageSize?: number;
+}
+
+/** Compare MACs case-insensitively, ignoring dashes/colons. */
+function normalizeMac(mac: string): string {
+  return mac.replace(/[-:]/g, "").toLowerCase();
 }
 
 export interface LogQueryOpts extends ListOpts {
@@ -143,6 +152,54 @@ export class OmadaClient {
       raw,
       `GET /sites/{siteId}/aps/${apMac}/radio-config`,
     );
+  }
+
+  // ─── Switch ports / PoE ───────────────────────────────────────────────────
+
+  /**
+   * Per-port link and PoE telemetry for the site's switches. Paginates until
+   * `totalRows` is reached, with a hard page cap so a misbehaving controller
+   * cannot cause an unbounded loop.
+   */
+  async listSwitchPortsPoe(siteId: string, opts: ListOpts = {}): Promise<SwitchPortPoeItem[]> {
+    const pageSize = opts.pageSize ?? 200;
+    const firstPage = opts.page ?? 1;
+    const maxPages = 50;
+    const items: SwitchPortPoeItem[] = [];
+    for (let page = firstPage; page < firstPage + maxPages; page += 1) {
+      const raw = await this.authedRequest(this.sitePath(siteId, "/switches/ports/poe-info"), {
+        query: { page, pageSize },
+      });
+      const parsed = parseApiResult(
+        paginatedSchema(switchPortPoeItemSchema),
+        raw,
+        "GET /sites/{siteId}/switches/ports/poe-info",
+      );
+      items.push(...parsed.data);
+      const total = parsed.totalRows;
+      if (parsed.data.length === 0 || (total !== undefined && items.length >= total)) {
+        break;
+      }
+    }
+    return items;
+  }
+
+  /** Detail (including per-port client/downlink attribution) for one switch. */
+  async getSwitchDetail(siteId: string, switchMac: string): Promise<SwitchDetail> {
+    const raw = await this.authedRequest(this.sitePath(siteId, "/switches/ports/switch-detail"), {
+      query: { switchMac },
+    });
+    const list = parseApiResult(
+      z.array(switchDetailSchema),
+      raw,
+      "GET /sites/{siteId}/switches/ports/switch-detail",
+    );
+    const want = normalizeMac(switchMac);
+    const match = list.find((d) => normalizeMac(d.mac) === want) ?? list[0];
+    if (!match) {
+      throw new Error(`switch-detail returned no entry for ${switchMac}`);
+    }
+    return match;
   }
 
   // ─── Clients ──────────────────────────────────────────────────────────────

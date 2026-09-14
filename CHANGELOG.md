@@ -5,6 +5,23 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `get_switch_ports` (`safe-read`) — per-port link and PoE telemetry for the
+  site's switches: port number, configured port label, connected client(s),
+  link status/speed, and PoE state (active/idle/n-a, W/V/mA, raw PD class).
+  Optional strict lookup by port number, port label, or client hostname/IP/MAC;
+  an unmatched or ambiguous target is an error. Verified against Omada
+  6.2.14.11.
+
+### Changed
+
+- Runtime dependencies pinned to exact, patched versions
+  (`@modelcontextprotocol/sdk` 1.30.0, `undici` 7.29.1, `zod` 4.5.4).
+- HTTP client now rejects redirects (`redirect: "error"`) so OAuth credentials
+  and access tokens can never be forwarded to another origin. See
+  `LOCAL_PATCHES.md`.
+
 ### Fixed
 
 - `.env` now loads when the server is launched by an MCP client (e.g.

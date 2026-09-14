@@ -1,6 +1,8 @@
 # Verified Omada Open API endpoints
 
-Shapes confirmed against a **live Omada Controller 6.2.10.17** (`apiVer` 3).
+Shapes confirmed against a live Omada Controller (`apiVer` 3): the core
+endpoints on **6.2.10.17**, and the switch-port/PoE endpoints on **6.2.14.11**
+(noted per section).
 Sample values are redacted. This file grows as each phase verifies more
 endpoints; it is the authoritative reference for what `omada-mcp` actually
 relies on.
@@ -109,3 +111,66 @@ Lists sites. Query params: `page` (1-based), `pageSize`.
   "primary": true
 }
 ```
+
+## GET /openapi/v1/{omadacId}/sites/{siteId}/switches/ports/poe-info
+
+Per-port link and PoE telemetry for every adopted switch in the site.
+Paginated (`page`, `pageSize`). Verified against Omada **6.2.14.11** on
+2026-09-14.
+
+Each row (values redacted):
+
+```jsonc
+{
+  "port": 8,
+  "portName": "Port8",          // configured label — may be anything
+  "switchMac": "02-00-00-00-00-01",
+  "switchName": "Main Switch",
+  "supportPoe": true,           // port hardware supports PoE
+  "switchSupportPoe": 1,
+  "poe": 1,                     // PoE mode flag (1 observed on all ports)
+  "connectedStatus": 1,         // 1 = a device is attached
+  "pdClass": "Class4",          // raw controller value; not interpreted
+  "power": 9.5,                 // watts
+  "voltage": 52.7,              // volts
+  "current": 181.0,             // milliamps
+  "portStatus": {
+    "port": 8,
+    "linkStatus": 1,            // 1 = link up
+    "linkSpeed": 3,             // see link-speed codes below
+    "duplex": 2,
+    "poe": true,                // true = currently sourcing power
+    "poePower": 9.5,
+    "stp": "Forwarding"
+  }
+}
+```
+
+- Measurements are `null` when the port is not delivering power.
+- Unit check: `voltage * current / 1000` ≈ `power` (52.7 V × 0.181 A ≈ 9.5 W),
+  which is how W/V/mA were confirmed.
+- Link-speed codes: 1=10M, 2=100M, 3=1G, 4=2.5G, 5=5G, 6=10G.
+
+## GET /openapi/v1/{omadacId}/sites/{siteId}/switches/ports/switch-detail
+
+Returns an **array**; pass `switchMac` to scope. Verified against Omada
+**6.2.14.11** on 2026-09-14. Each entry:
+
+```jsonc
+{
+  "mac": "02-00-00-00-00-01",
+  "name": "Main Switch",
+  "model": "SG2016P",
+  "downlinkList": [
+    { "port": 8, "name": "AP-B", "mac": "...", "ip": "<ip>", "type": "ap" }
+  ],
+  "clientList": [
+    { "port": 16, "name": "test-client", "mac": "...", "ip": "<ip>" }
+  ]
+}
+```
+
+Port number is the only reliable join key between this endpoint and
+`poe-info`. Devices attached to a downstream (non-adopted) switch are reported
+against that switch's uplink port only, so their individual ports cannot be
+resolved.

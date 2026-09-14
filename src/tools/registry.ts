@@ -6,6 +6,7 @@ import { getClientTool } from "./read/getClient.js";
 import { getDeviceTool } from "./read/getDevice.js";
 import { getSiteSettingsTool } from "./read/getSiteSettings.js";
 import { getSsidTool } from "./read/getSsid.js";
+import { getSwitchPortsTool } from "./read/getSwitchPorts.js";
 import { listClientsTool } from "./read/listClients.js";
 import { listDevicesTool } from "./read/listDevices.js";
 import { listEventsTool } from "./read/listEvents.js";
@@ -36,6 +37,7 @@ const ALL_TOOLS: readonly ToolModule[] = [
   listSsidsTool,
   getSsidTool,
   getSiteSettingsTool,
+  getSwitchPortsTool,
   listEventsTool,
   listLogsTool,
   // ops-write
